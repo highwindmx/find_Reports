@@ -5,7 +5,7 @@ For Batch Report locating and downloading
 import os
 import sys 
 from PyQt5.QtWidgets import (QApplication, QMainWindow,\
-                            QWidget,QPushButton,QPlainTextEdit,QTableWidget,QTableWidgetItem,\
+                            QWidget,QPushButton,QPlainTextEdit,QTableWidget,QTableWidgetItem,QFileDialog,QMessageBox,\
                             QGridLayout)
 from PyQt5.QtGui import QIcon,QColor
 from PyQt5.QtCore import Qt
@@ -72,7 +72,8 @@ class MainWindow(QMainWindow):
         for i in range(0,self.output_list.rowCount()):
             pid = self.output_list.item(i,0).text()
             #path = self.index.loc[self.index["PID"].str.contains(pid), "Path"] # 完全匹配
-            path = self.index.loc[self.index["PID"].isin([pid]), "Path"] # 精确匹配
+            #path = self.index.loc[self.index["PID"].isin([pid]), "Path"] # 精确匹配
+            path = self.index.loc[self.index["PID"].str.lower().isin([pid.lower()]), "Path"] # 精确匹配，但忽略大小写
             path_num = len(list(path))
             total_num += path_num
             self.output_list.setItem(i,1, QTableWidgetItem(str(path_num)))
@@ -85,9 +86,11 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(f"共找到 {total_num} 条报告记录")
     
     def downloadReports(self):
+        DESTDIR = QFileDialog.getExistingDirectory(self, "选择下载目录", "c://")
         sn = 0
         fn = 0
         log = ""
+        flog = ""
         for i in range(0,self.output_list.rowCount()):
             path = self.output_list.item(i,2).text().split(SPLITMARK)
             for p in path:
@@ -96,11 +99,19 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     fn+=1
                     log+=f"拷贝失败：共计{fn}，{os.path.basename(p)} 错误为：{e}\n"
+                    flog+=f"拷贝失败：共计{fn}，{os.path.basename(p)} 错误为：{e}\n"
                 else:
                     sn+=1
                     log+=f"拷贝成功：共计{sn}，已完成：{os.path.basename(p)}\n"
         with open(os.path.join(DESTDIR,"log.txt"), "w") as f: # 一并导出下载记录，以便进行核对
             f.write(log)
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("下载情况")
+        msg.setInformativeText("如有出错情况可见右下方 Show Details... \n以及下载目录中的log.txt文件")
+        msg.setWindowTitle("下载完成")
+        msg.setDetailedText(f"下载出错情况如下:\n{flog}")
+        msg.show()
             
 app = QApplication(sys.argv) 
 w = MainWindow() 
