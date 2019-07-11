@@ -1,6 +1,6 @@
 '''
 created by Highwindmx @ 20190711
-For Batch Report Searching and Downloading
+For Batch Report locating and downloading
 '''
 import os
 import sys 
@@ -12,11 +12,11 @@ from PyQt5.QtCore import Qt
 import pandas as pd
 import shutil
 
-######################### 使用时可根据情况修改 ###################
+######################### 使用时可根据情况修改 #########################################################
 SPLITMARK = " | "
-DESTDIR = "D:/test" # 报告默认下载路径，后期可以用FileDialog来实现
-DATABASE = os.path.abspath("./res/database/index.xlsx") #索引表格路径
-######################### 使用时可根据情况修改 ###################
+DESTDIR = "D:/test"  # 报告默认下载路径，后期可以用FileDialog来实现
+DATABASE = os.path.abspath("./res/database/index.xlsx") # 索引表格路径
+######################### 使用时可根据情况修改 #########################################################
 
 class MainWindow(QMainWindow): 
     def __init__(self, parent=None): 
@@ -71,8 +71,8 @@ class MainWindow(QMainWindow):
         total_num = 0
         for i in range(0,self.output_list.rowCount()):
             pid = self.output_list.item(i,0).text()
-            #path = self.index.loc[self.index["PID"].str.contains(pid), "Path"]
-            path = self.index.loc[self.index["PID"].isin([pid]), "Path"]
+            #path = self.index.loc[self.index["PID"].str.contains(pid), "Path"] # 完全匹配
+            path = self.index.loc[self.index["PID"].isin([pid]), "Path"] # 精确匹配
             path_num = len(list(path))
             total_num += path_num
             self.output_list.setItem(i,1, QTableWidgetItem(str(path_num)))
@@ -99,7 +99,7 @@ class MainWindow(QMainWindow):
                 else:
                     sn+=1
                     log+=f"拷贝成功：共计{sn}，已完成：{os.path.basename(p)}\n"
-        with open(os.path.join(DESTDIR,"log.txt"), "w") as f:
+        with open(os.path.join(DESTDIR,"log.txt"), "w") as f: # 一并导出下载记录，以便进行核对
             f.write(log)
             
 app = QApplication(sys.argv) 
